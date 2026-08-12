@@ -7,6 +7,8 @@ import { varAlpha } from 'minimal-shared/utils';
 import Box from '@mui/material/Box';
 import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgress';
 
+import { ProtectedRoute } from 'src/routes/components';
+
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
 
@@ -16,6 +18,7 @@ export const DashboardPage = lazy(() => import('src/pages/dashboard'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const SignInPage = lazy(() => import('src/pages/sign-in'));
+export const SignUpPage = lazy(() => import('src/pages/sign-up'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
@@ -41,20 +44,27 @@ const renderFallback = () => (
 
 export const routesSection: RouteObject[] = [
   {
-    element: (
-      <DashboardLayout>
-        <Suspense fallback={renderFallback()}>
-          <Outlet />
-        </Suspense>
-      </DashboardLayout>
-    ),
-    children: [
-      { index: true, element: <DashboardPage /> },
-      { path: 'user', element: <UserPage /> },
-      { path: 'products', element: <ProductsPage /> },
-      { path: 'blog', element: <BlogPage /> },
-    ],
-  },
+  element: (
+    <DashboardLayout>
+      <Suspense fallback={renderFallback()}>
+        <Outlet />
+      </Suspense>
+    </DashboardLayout>
+  ),
+  children: [
+    { index: true, element: <DashboardPage /> },
+    {
+  path: 'user',
+  element: (
+    <ProtectedRoute>
+      <UserPage />
+    </ProtectedRoute>
+  ),
+},
+    { path: 'products', element: <ProductsPage /> },
+    { path: 'blog', element: <BlogPage /> },
+  ],
+},
   {
     path: 'sign-in',
     element: (
@@ -63,6 +73,16 @@ export const routesSection: RouteObject[] = [
       </AuthLayout>
     ),
   },
+
+  {
+  path: 'sign-up',
+  element: (
+    <AuthLayout>
+      <SignUpPage />
+    </AuthLayout>
+  ),
+},
+
   {
     path: '404',
     element: <Page404 />,

@@ -26,6 +26,7 @@ app.get("/", (req, res) => {
 });
 
 app.use(API_PREFIX, require("./routes/userRoutes"));
+app.use(`${API_PREFIX}/auth`, require("./routes/authRoutes"));
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

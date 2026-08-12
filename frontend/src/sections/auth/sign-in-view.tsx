@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
@@ -20,23 +21,78 @@ export function SignInView() {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSignIn = useCallback(() => {
-    router.push('/');
-  }, [router]);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSignIn = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
+      setError('');
+      setLoading(true);
+
+      try {
+        const response = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message || 'Login failed');
+          return;
+        }
+
+        // Store the JWT token
+        localStorage.setItem('token', data.token);
+
+        // Store user information
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        // Login successful
+        router.push('/');
+      } catch (err) {
+        console.error('Login error:', err);
+        setError('Unable to connect to the server');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [email, password, router]
+  );
 
   const renderForm = (
     <Box
+      component="form"
+      onSubmit={handleSignIn}
       sx={{
         display: 'flex',
         alignItems: 'flex-end',
         flexDirection: 'column',
       }}
     >
+      {error && (
+        <Alert severity="error" sx={{ width: 1, mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
       <TextField
         fullWidth
         name="email"
         label="Email address"
-        defaultValue="hello@gmail.com"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
         sx={{ mb: 3 }}
         slotProps={{
           inputLabel: { shrink: true },
@@ -51,15 +107,26 @@ export function SignInView() {
         fullWidth
         name="password"
         label="Password"
-        defaultValue="@demo1234"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
         type={showPassword ? 'text' : 'password'}
         slotProps={{
           inputLabel: { shrink: true },
           input: {
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? 'solar:eye-bold' : 'solar:eye-closed-bold'} />
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                  type="button"
+                >
+                  <Iconify
+                    icon={
+                      showPassword
+                        ? 'solar:eye-bold'
+                        : 'solar:eye-closed-bold'
+                    }
+                  />
                 </IconButton>
               </InputAdornment>
             ),
@@ -74,9 +141,9 @@ export function SignInView() {
         type="submit"
         color="inherit"
         variant="contained"
-        onClick={handleSignIn}
+        disabled={loading}
       >
-        Sign in
+        {loading ? 'Signing in...' : 'Sign in'}
       </Button>
     </Box>
   );
@@ -93,27 +160,38 @@ export function SignInView() {
         }}
       >
         <Typography variant="h5">Sign in</Typography>
+
         <Typography
-          variant="body2"
-          sx={{
-            color: 'text.secondary',
-          }}
-        >
-          Don’t have an account?
-          <Link variant="subtitle2" sx={{ ml: 0.5 }}>
-            Get started
-          </Link>
-        </Typography>
+  variant="body2"
+  sx={{
+    color: 'text.secondary',
+  }}
+>
+  Don’t have an account?
+  <Link
+    variant="subtitle2"
+    sx={{ ml: 0.5, cursor: 'pointer' }}
+    onClick={() => router.push('/sign-up')}
+  >
+    Get started
+  </Link>
+</Typography>
       </Box>
+
       {renderForm}
+
       <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
         <Typography
           variant="overline"
-          sx={{ color: 'text.secondary', fontWeight: 'fontWeightMedium' }}
+          sx={{
+            color: 'text.secondary',
+            fontWeight: 'fontWeightMedium',
+          }}
         >
           OR
         </Typography>
       </Divider>
+
       <Box
         sx={{
           gap: 1,
@@ -124,9 +202,11 @@ export function SignInView() {
         <IconButton color="inherit">
           <Iconify width={22} icon="socials:google" />
         </IconButton>
+
         <IconButton color="inherit">
           <Iconify width={22} icon="socials:github" />
         </IconButton>
+
         <IconButton color="inherit">
           <Iconify width={22} icon="socials:twitter" />
         </IconButton>

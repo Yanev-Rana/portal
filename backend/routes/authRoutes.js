@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -13,8 +14,8 @@ router.post("/signup", async (req, res) => {
             name,
             phone,
             email,
-            city,
-            state,
+            // city,
+            // state,
             password
         } = req.body;
 
@@ -23,8 +24,6 @@ router.post("/signup", async (req, res) => {
             !name ||
             !phone ||
             !email ||
-            !city ||
-            !state ||
             !password
         ) {
             return res.status(400).json({
@@ -51,8 +50,8 @@ router.post("/signup", async (req, res) => {
             name,
             phone,
             email,
-            city,
-            state,
+            // city,
+            // state,
             password: hashedPassword
         });
 
@@ -147,5 +146,31 @@ router.post("/login", async (req, res) => {
     }
 });
 
+// GET /api/auth/profile
+router.get("/profile", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).select("-password");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            user
+        });
+
+    } catch (error) {
+        console.error("Profile error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Server error while fetching profile"
+        });
+    }
+});
 
 module.exports = router;

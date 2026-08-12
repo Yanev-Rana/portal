@@ -1,11 +1,13 @@
 {
   "compilerOptions": {
-    /* Bundler */
-    "baseUrl": ".",
-    "module": "ESNext",
-    "jsx": "react-jsx",
-    "allowJs": true,
-    "resolveJsonModule": true,
+  /* Bundler */
+  "module": "ESNext",
+  "jsx": "react-jsx",
+  "allowJs": true,
+  "resolveJsonModule": true,
+  "paths": {
+  "src/*": ["./src/*"]
+},
 
     /* Build */
     "target": "ES2020",

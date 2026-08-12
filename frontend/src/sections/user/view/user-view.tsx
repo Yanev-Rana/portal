@@ -1,43 +1,105 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Table from '@mui/material/Table';
-import Button from '@mui/material/Button';
-import TableBody from '@mui/material/TableBody';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import Avatar from '@mui/material/Avatar';
+import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
-import TableContainer from '@mui/material/TableContainer';
-import TablePagination from '@mui/material/TablePagination';
+import CircularProgress from '@mui/material/CircularProgress';
 
-import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
 
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
+// ----------------------------------------------------------------------
 
-import { TableNoData } from '../table-no-data';
-import { UserTableRow } from '../user-table-row';
-import { UserTableHead } from '../user-table-head';
-import { TableEmptyRows } from '../table-empty-rows';
-import { UserTableToolbar } from '../user-table-toolbar';
-import { emptyRows, applyFilter, getComparator } from '../utils';
-
-import type { UserProps } from '../user-table-row';
+type User = {
+  _id: string;
+  name: string;
+  phone: string;
+  email: string;
+  // city: string;
+  // state: string;
+};
 
 // ----------------------------------------------------------------------
 
 export function UserView() {
-  const table = useTable();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const [filterName, setFilterName] = useState('');
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
 
-  const dataFiltered: UserProps[] = applyFilter({
-    inputData: _users,
-    comparator: getComparator(table.order, table.orderBy),
-    filterName,
-  });
+        if (!token) {
+          setError('You are not logged in.');
+          return;
+        }
 
-  const notFound = !dataFiltered.length && !!filterName;
+        const response = await fetch(
+          'http://localhost:5000/api/auth/profile',
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message || 'Unable to load profile');
+          return;
+        }
+
+        setUser(data.user);
+      } catch (err) {
+        console.error('Profile error:', err);
+        setError('Unable to connect to the server');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <DashboardContent>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: 400,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      </DashboardContent>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardContent>
+        <Alert severity="error">{error}</Alert>
+      </DashboardContent>
+    );
+  }
+
+  if (!user) {
+    return (
+      <DashboardContent>
+        <Alert severity="warning">No user information found.</Alert>
+      </DashboardContent>
+    );
+  }
 
   return (
     <DashboardContent>
@@ -48,87 +110,73 @@ export function UserView() {
           alignItems: 'center',
         }}
       >
-        <Typography variant="h4" sx={{ flexGrow: 1 }}>
-          Users
-        </Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-        >
-          New user
-        </Button>
+        <Typography variant="h4">My Profile</Typography>
       </Box>
 
-      <Card>
-        <UserTableToolbar
-          numSelected={table.selected.length}
-          filterName={filterName}
-          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setFilterName(event.target.value);
-            table.onResetPage();
-          }}
-        />
+      <Card
+        sx={{
+          maxWidth: 700,
+          mx: 'auto',
+          p: 4,
+        }}
+      >
+        <Stack
+          spacing={3}
+          alignItems="center"
+          sx={{ mb: 4 }}
+        >
+          <Avatar
+            sx={{
+              width: 100,
+              height: 100,
+              fontSize: 40,
+            }}
+          >
+            {user.name.charAt(0).toUpperCase()}
+          </Avatar>
 
-        <Scrollbar>
-          <TableContainer sx={{ overflow: 'unset' }}>
-            <Table sx={{ minWidth: 800 }}>
-              <UserTableHead
-                order={table.order}
-                orderBy={table.orderBy}
-                rowCount={_users.length}
-                numSelected={table.selected.length}
-                onSort={table.onSort}
-                onSelectAllRows={(checked) =>
-                  table.onSelectAllRows(
-                    checked,
-                    _users.map((user) => user.id)
-                  )
-                }
-                headLabel={[
-                  { id: 'name', label: 'Name' },
-                  { id: 'company', label: 'Company' },
-                  { id: 'role', label: 'Role' },
-                  { id: 'isVerified', label: 'Verified', align: 'center' },
-                  { id: 'status', label: 'Status' },
-                  { id: '' },
-                ]}
-              />
-              <TableBody>
-                {dataFiltered
-                  .slice(
-                    table.page * table.rowsPerPage,
-                    table.page * table.rowsPerPage + table.rowsPerPage
-                  )
-                  .map((row) => (
-                    <UserTableRow
-                      key={row.id}
-                      row={row}
-                      selected={table.selected.includes(row.id)}
-                      onSelectRow={() => table.onSelectRow(row.id)}
-                    />
-                  ))}
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h5">
+              {user.name}
+            </Typography>
 
-                <TableEmptyRows
-                  height={68}
-                  emptyRows={emptyRows(table.page, table.rowsPerPage, _users.length)}
-                />
+            <Typography
+              variant="body2"
+              sx={{ color: 'text.secondary' }}
+            >
+              {user.email}
+            </Typography>
+          </Box>
+        </Stack>
 
-                {notFound && <TableNoData searchQuery={filterName} />}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Scrollbar>
+        <Divider sx={{ mb: 3 }} />
 
-        <TablePagination
-          component="div"
-          page={table.page}
-          count={_users.length}
-          rowsPerPage={table.rowsPerPage}
-          onPageChange={table.onChangePage}
-          rowsPerPageOptions={[5, 10, 25]}
-          onRowsPerPageChange={table.onChangeRowsPerPage}
-        />
+        <Stack spacing={3}>
+          <ProfileField
+            label="Full Name"
+            value={user.name}
+          />
+
+          <ProfileField
+            label="Email Address"
+            value={user.email}
+          />
+
+          <ProfileField
+            label="Phone Number"
+            value={user.phone}
+          />
+
+          {/* <ProfileField
+            label="City"
+            value={user.city}
+          />
+
+          <ProfileField
+            label="State"
+            value={user.state}
+          /> */}
+        </Stack>
       </Card>
     </DashboardContent>
   );
@@ -136,68 +184,28 @@ export function UserView() {
 
 // ----------------------------------------------------------------------
 
-export function useTable() {
-  const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState('name');
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+type ProfileFieldProps = {
+  label: string;
+  value: string;
+};
 
-  const onSort = useCallback(
-    (id: string) => {
-      const isAsc = orderBy === id && order === 'asc';
-      setOrder(isAsc ? 'desc' : 'asc');
-      setOrderBy(id);
-    },
-    [order, orderBy]
+function ProfileField({ label, value }: ProfileFieldProps) {
+  return (
+    <Box>
+      <Typography
+        variant="caption"
+        sx={{
+          display: 'block',
+          mb: 0.5,
+          color: 'text.secondary',
+        }}
+      >
+        {label}
+      </Typography>
+
+      <Typography variant="body1">
+        {value}
+      </Typography>
+    </Box>
   );
-
-  const onSelectAllRows = useCallback((checked: boolean, newSelecteds: string[]) => {
-    if (checked) {
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  }, []);
-
-  const onSelectRow = useCallback(
-    (inputValue: string) => {
-      const newSelected = selected.includes(inputValue)
-        ? selected.filter((value) => value !== inputValue)
-        : [...selected, inputValue];
-
-      setSelected(newSelected);
-    },
-    [selected]
-  );
-
-  const onResetPage = useCallback(() => {
-    setPage(0);
-  }, []);
-
-  const onChangePage = useCallback((event: unknown, newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const onChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(parseInt(event.target.value, 10));
-      onResetPage();
-    },
-    [onResetPage]
-  );
-
-  return {
-    page,
-    order,
-    onSort,
-    orderBy,
-    selected,
-    rowsPerPage,
-    onSelectRow,
-    onResetPage,
-    onChangePage,
-    onSelectAllRows,
-    onChangeRowsPerPage,
-  };
 }

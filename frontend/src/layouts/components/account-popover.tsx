@@ -14,7 +14,7 @@ import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 
 import { useRouter, usePathname } from 'src/routes/hooks';
 
-import { _myAccount } from 'src/_mock';
+import { useAuth } from 'src/auth/auth-context';
 
 // ----------------------------------------------------------------------
 
@@ -27,16 +27,26 @@ export type AccountPopoverProps = IconButtonProps & {
   }[];
 };
 
-export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps) {
+export function AccountPopover({
+  data = [],
+  sx,
+  ...other
+}: AccountPopoverProps) {
   const router = useRouter();
+
+  const { user, logout, isAuthenticated } = useAuth();
 
   const pathname = usePathname();
 
-  const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(null);
+  const [openPopover, setOpenPopover] =
+    useState<HTMLButtonElement | null>(null);
 
-  const handleOpenPopover = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    setOpenPopover(event.currentTarget);
-  }, []);
+  const handleOpenPopover = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      setOpenPopover(event.currentTarget);
+    },
+    []
+  );
 
   const handleClosePopover = useCallback(() => {
     setOpenPopover(null);
@@ -50,31 +60,61 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
     [handleClosePopover, router]
   );
 
+  const handleSignIn = useCallback(() => {
+    router.push('/sign-in');
+  }, [router]);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    handleClosePopover();
+    router.push('/sign-in');
+  }, [handleClosePopover, logout, router]);
+
   return (
     <>
-      <IconButton
-        onClick={handleOpenPopover}
-        sx={{
-          p: '2px',
-          width: 40,
-          height: 40,
-          background: (theme) =>
-            `conic-gradient(${theme.vars.palette.primary.light}, ${theme.vars.palette.warning.light}, ${theme.vars.palette.primary.light})`,
-          ...sx,
-        }}
-        {...other}
-      >
-        <Avatar src={_myAccount.photoURL} alt={_myAccount.displayName} sx={{ width: 1, height: 1 }}>
-          {_myAccount.displayName.charAt(0).toUpperCase()}
-        </Avatar>
-      </IconButton>
+      {!isAuthenticated ? (
+        <Button
+  variant="contained"
+  color="inherit"
+  onClick={handleSignIn}
+  sx={sx}
+>
+  Sign in
+</Button>
+      ) : (
+        <IconButton
+          onClick={handleOpenPopover}
+          sx={{
+            p: '2px',
+            width: 40,
+            height: 40,
+            background: (theme) =>
+              `conic-gradient(${theme.vars.palette.primary.light}, ${theme.vars.palette.warning.light}, ${theme.vars.palette.primary.light})`,
+            ...sx,
+          }}
+          {...other}
+        >
+          <Avatar
+            alt={user?.name || 'User'}
+            sx={{ width: 1, height: 1 }}
+          >
+            {(user?.name || 'User').charAt(0).toUpperCase()}
+          </Avatar>
+        </IconButton>
+      )}
 
       <Popover
-        open={!!openPopover}
+        open={isAuthenticated && !!openPopover}
         anchorEl={openPopover}
         onClose={handleClosePopover}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
         slotProps={{
           paper: {
             sx: { width: 200 },
@@ -83,11 +123,15 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
       >
         <Box sx={{ p: 2, pb: 1.5 }}>
           <Typography variant="subtitle2" noWrap>
-            {_myAccount?.displayName}
+            {user?.name || 'User'}
           </Typography>
 
-          <Typography variant="body2" sx={{ color: 'text.secondary' }} noWrap>
-            {_myAccount?.email}
+          <Typography
+            variant="body2"
+            sx={{ color: 'text.secondary' }}
+            noWrap
+          >
+            {user?.email || ''}
           </Typography>
         </Box>
 
@@ -105,7 +149,9 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
               gap: 2,
               borderRadius: 0.75,
               color: 'text.secondary',
-              '&:hover': { color: 'text.primary' },
+              '&:hover': {
+                color: 'text.primary',
+              },
               [`&.${menuItemClasses.selected}`]: {
                 color: 'text.primary',
                 bgcolor: 'action.selected',
@@ -129,7 +175,13 @@ export function AccountPopover({ data = [], sx, ...other }: AccountPopoverProps)
         <Divider sx={{ borderStyle: 'dashed' }} />
 
         <Box sx={{ p: 1 }}>
-          <Button fullWidth color="error" size="medium" variant="text">
+          <Button
+            fullWidth
+            color="error"
+            size="medium"
+            variant="text"
+            onClick={handleLogout}
+          >
             Logout
           </Button>
         </Box>
