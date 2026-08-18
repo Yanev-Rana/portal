@@ -11,6 +11,8 @@ import { ProtectedRoute } from 'src/routes/components';
 
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
+import { ResetPasswordView } from 'src/pages/reset-password';
+import { ForgotPasswordView } from 'src/pages/forgot-password';
 
 // ----------------------------------------------------------------------
 
@@ -81,6 +83,15 @@ export const routesSection: RouteObject[] = [
       <SignUpPage />
     </AuthLayout>
   ),
+},
+
+  {
+  path: 'forgot-password',
+  element: <ForgotPasswordView />,
+},
+{
+  path: 'reset-password/:token',
+  element: <ResetPasswordView />,
 },
 
   {

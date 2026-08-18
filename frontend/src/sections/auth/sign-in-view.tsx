@@ -14,10 +14,13 @@ import { useRouter } from 'src/routes/hooks';
 
 import { Iconify } from 'src/components/iconify';
 
+import { useAuth } from 'src/auth/auth-context';
+
 // ----------------------------------------------------------------------
 
 export function SignInView() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -53,14 +56,11 @@ export function SignInView() {
           return;
         }
 
-        // Store the JWT token
-        localStorage.setItem('token', data.token);
+        // Update authentication state
+login(data.token, data.user);
 
-        // Store user information
-        localStorage.setItem('user', JSON.stringify(data.user));
-
-        // Login successful
-        router.push('/');
+// Login successful
+router.push('/');
       } catch (err) {
         console.error('Login error:', err);
         setError('Unable to connect to the server');
@@ -68,7 +68,7 @@ export function SignInView() {
         setLoading(false);
       }
     },
-    [email, password, router]
+    [email, password, router, login]
   );
 
   const renderForm = (
@@ -99,9 +99,19 @@ export function SignInView() {
         }}
       />
 
-      <Link variant="body2" color="inherit" sx={{ mb: 1.5 }}>
-        Forgot password?
-      </Link>
+      <Link
+  component="button"
+  type="button"
+  variant="body2"
+  color="inherit"
+  onClick={() => router.push('/forgot-password')}
+  sx={{
+    mb: 1.5,
+    cursor: 'pointer',
+  }}
+>
+  Forgot password?
+</Link>
 
       <TextField
         fullWidth

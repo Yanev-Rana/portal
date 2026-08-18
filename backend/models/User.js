@@ -21,21 +21,25 @@ const userSchema = new mongoose.Schema(
             lowercase: true
         },
 
-        // city: {
-        //     type: String,
-        //     required: true,
-        //     trim: true
-        // },
-
-        // state: {
-        //     type: String,
-        //     required: true,
-        //     trim: true
-        // },
-
         password: {
             type: String,
             required: true
+        },
+
+        resetPasswordToken: {
+            type: String,
+            default: null
+        },
+
+        resetPasswordExpires: {
+            type: Date,
+            default: null
+        },
+
+        role: {
+            type: String,
+            enum: ["user", "admin"],
+            default: "user"
         }
     },
     {
