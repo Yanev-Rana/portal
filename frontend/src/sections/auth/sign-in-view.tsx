@@ -59,8 +59,11 @@ export function SignInView() {
         // Update authentication state
 login(data.token, data.user);
 
-// Login successful
-router.push('/');
+if (data.user.role === 'admin') {
+  router.push('/admin');
+} else {
+  router.push('/user');
+}
       } catch (err) {
         console.error('Login error:', err);
         setError('Unable to connect to the server');

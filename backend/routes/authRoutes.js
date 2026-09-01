@@ -5,6 +5,7 @@ const crypto = require("crypto");
 
 const User = require("../models/User");
 const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
 const { sendPasswordResetEmail } = require("../utils/mailer");
 
 const router = express.Router();
@@ -117,14 +118,15 @@ router.post("/login", async (req, res) => {
 
         // Create JWT
         const token = jwt.sign(
-            {
-                userId: user._id
-            },
-            process.env.JWT_SECRET,
-            {
-                expiresIn: "1d"
-            }
-        );
+    {
+        userId: user._id,
+        role: user.role
+    },
+    process.env.JWT_SECRET,
+    {
+        expiresIn: "1d"
+    }
+);
 
         res.status(200).json({
             success: true,
@@ -289,5 +291,34 @@ router.post("/reset-password/:token", async (req, res) => {
         });
     }
 });
+
+
+// GET /api/auth/users
+// Admin only
+router.get(
+    "/users",
+    authMiddleware,
+    adminMiddleware,
+    async (req, res) => {
+        try {
+            const users = await User.find()
+                .select("-password -resetPasswordToken -resetPasswordExpires")
+                .sort({ createdAt: -1 });
+
+            res.status(200).json({
+                success: true,
+                users
+            });
+
+        } catch (error) {
+            console.error("Fetch users error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Server error while fetching users"
+            });
+        }
+    }
+);
 
 module.exports = router;

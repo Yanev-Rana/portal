@@ -9,6 +9,8 @@ import { useTheme } from '@mui/material/styles';
 
 import { _langs, _notifications } from 'src/_mock';
 
+import { useAuth } from 'src/auth/auth-context';
+
 import { NavMobile, NavDesktop } from './nav';
 import { layoutClasses } from '../core/classes';
 import { _account } from '../nav-config-account';
@@ -16,7 +18,6 @@ import { dashboardLayoutVars } from './css-vars';
 import { navData } from '../nav-config-dashboard';
 import { MainSection } from '../core/main-section';
 import { Searchbar } from '../components/searchbar';
-import { _workspaces } from '../nav-config-workspace';
 import { MenuButton } from '../components/menu-button';
 import { HeaderSection } from '../core/header-section';
 import { LayoutSection } from '../core/layout-section';
@@ -49,6 +50,11 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const theme = useTheme();
 
+  const { user } = useAuth();
+
+const userRole = user?.role || 'user';
+const navigationData = navData(userRole);
+
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
   const renderHeader = () => {
@@ -71,7 +77,11 @@ export function DashboardLayout({
             onClick={onOpen}
             sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
           />
-          <NavMobile data={navData} open={open} onClose={onClose} workspaces={_workspaces} />
+          <NavMobile
+         data={navigationData}
+         open={open}
+         onClose={onClose}
+         />
         </>
       ),
       rightArea: (
@@ -117,7 +127,10 @@ export function DashboardLayout({
        * @Sidebar
        *************************************** */
       sidebarSection={
-        <NavDesktop data={navData} layoutQuery={layoutQuery} workspaces={_workspaces} />
+        <NavDesktop
+  data={navigationData}
+  layoutQuery={layoutQuery}
+/>
       }
       /** **************************************
        * @Footer

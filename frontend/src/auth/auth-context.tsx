@@ -8,6 +8,7 @@ type User = {
   email: string;
   city?: string;
   state?: string;
+  role: 'user' | 'admin';
   createdAt?: string;
   updatedAt?: string;
 };

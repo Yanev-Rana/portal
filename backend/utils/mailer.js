@@ -1,16 +1,17 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: process.env.MAIL_HOST,
+    port: Number(process.env.MAIL_PORT),
+    secure: false,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASSWORD
     }
 });
-
 async function sendPasswordResetEmail(email, resetLink) {
     await transporter.sendMail({
-        from: `"Registration Portal" <${process.env.EMAIL_USER}>`,
+        from: '"Registration Portal" <no-reply@portal.test>',
         to: email,
         subject: "Password Reset Request",
         html: `
