@@ -23,9 +23,8 @@ export const SignInPage = lazy(() => import('src/pages/sign-in'));
 export const SignUpPage = lazy(() => import('src/pages/sign-up'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
-export const AdminDashboardPage = lazy(
-  () => import('src/pages/admin-dashboard')
-);
+export const AdminDashboardPage = lazy(() => import('src/pages/admin-dashboard'));
+export const AdminUsersPage = lazy(() => import('src/pages/admin-users'));
 
 const renderFallback = () => (
   <Box
@@ -91,6 +90,15 @@ export const routesSection: RouteObject[] = [
   element: (
     <ProtectedRoute allowedRole="admin">
       <AdminDashboardPage />
+    </ProtectedRoute>
+  ),
+},
+
+{
+  path: 'admin/users',
+  element: (
+    <ProtectedRoute allowedRole="admin">
+      <AdminUsersPage />
     </ProtectedRoute>
   ),
 },

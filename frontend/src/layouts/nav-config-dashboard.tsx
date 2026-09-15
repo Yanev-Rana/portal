@@ -23,10 +23,10 @@ export const navData = (role: 'user' | 'admin'): NavItem[] => {
         icon: icon('ic-analytics'),
       },
       {
-        title: 'User Management',
-        path: '/user',
-        icon: icon('ic-user'),
-      },
+  title: 'User Management',
+  path: '/admin/users',
+  icon: icon('ic-user'),
+},
       {
         title: 'Product',
         path: '/products',

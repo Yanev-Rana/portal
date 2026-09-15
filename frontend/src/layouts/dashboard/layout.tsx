@@ -54,6 +54,7 @@ export function DashboardLayout({
 
 const userRole = user?.role || 'user';
 const navigationData = navData(userRole);
+const isAdmin = userRole === 'admin';
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
@@ -81,6 +82,7 @@ const navigationData = navData(userRole);
          data={navigationData}
          open={open}
          onClose={onClose}
+         isAdmin={isAdmin}
          />
         </>
       ),
@@ -108,7 +110,16 @@ const navigationData = navData(userRole);
         {...slotProps?.header}
         slots={{ ...headerSlots, ...slotProps?.header?.slots }}
         slotProps={merge(headerSlotProps, slotProps?.header?.slotProps ?? {})}
-        sx={slotProps?.header?.sx}
+        sx={[
+  isAdmin && {
+    bgcolor: '#111827',
+    color: '#ffffff',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+  },
+  ...(Array.isArray(slotProps?.header?.sx)
+    ? slotProps.header.sx
+    : [slotProps?.header?.sx]),
+]}
       />
     );
   };
@@ -130,6 +141,7 @@ const navigationData = navData(userRole);
         <NavDesktop
   data={navigationData}
   layoutQuery={layoutQuery}
+  isAdmin={isAdmin}
 />
       }
       /** **************************************

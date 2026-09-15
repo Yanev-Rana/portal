@@ -24,6 +24,9 @@ export type NavContentProps = {
     topArea?: React.ReactNode;
     bottomArea?: React.ReactNode;
   };
+
+  isAdmin?: boolean;
+
   sx?: SxProps<Theme>;
 };
 
@@ -31,6 +34,7 @@ export function NavDesktop({
   sx,
   data,
   slots,
+  isAdmin,
   layoutQuery,
 }: NavContentProps & { layoutQuery: Breakpoint }) {
   const theme = useTheme();
@@ -38,24 +42,31 @@ export function NavDesktop({
   return (
     <Box
       sx={{
-        pt: 2.5,
-        px: 2.5,
-        top: 0,
-        left: 0,
-        height: 1,
-        display: 'none',
-        position: 'fixed',
-        flexDirection: 'column',
-        zIndex: 'var(--layout-nav-zIndex)',
-        width: 'var(--layout-nav-vertical-width)',
-        borderRight: `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
-        [theme.breakpoints.up(layoutQuery)]: {
-          display: 'flex',
-        },
-        ...sx,
-      }}
+  pt: 2.5,
+  px: 2.5,
+  top: 0,
+  left: 0,
+  height: 1,
+  display: 'none',
+  position: 'fixed',
+  flexDirection: 'column',
+  zIndex: 'var(--layout-nav-zIndex)',
+  width: 'var(--layout-nav-vertical-width)',
+
+  bgcolor: isAdmin ? '#111827' : 'background.paper',
+
+  borderRight: isAdmin
+    ? '1px solid rgba(255,255,255,0.08)'
+    : `1px solid ${varAlpha(theme.vars.palette.grey['500Channel'], 0.12)}`,
+
+  [theme.breakpoints.up(layoutQuery)]: {
+    display: 'flex',
+  },
+
+  ...sx,
+}}
     >
-      <NavContent data={data} slots={slots} />
+      <NavContent data={data} slots={slots} isAdmin={isAdmin} />
     </Box>
   );
 }
@@ -68,6 +79,7 @@ export function NavMobile({
   open,
   slots,
   onClose,
+  isAdmin,
 }: NavContentProps & { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
 
@@ -92,14 +104,14 @@ export function NavMobile({
         },
       }}
     >
-      <NavContent data={data} slots={slots}/>
+      <NavContent data={data} slots={slots} isAdmin={isAdmin}/>
     </Drawer>
   );
 }
 
 // ----------------------------------------------------------------------
 
-export function NavContent({ data, slots, sx }: NavContentProps) {
+export function NavContent({ data, slots, isAdmin, sx }: NavContentProps) {
   const pathname = usePathname();
 
   return (
@@ -145,16 +157,27 @@ export function NavContent({ data, slots, sx }: NavContentProps) {
                         borderRadius: 0.75,
                         typography: 'body2',
                         fontWeight: 'fontWeightMedium',
-                        color: theme.vars.palette.text.secondary,
+                        color: isAdmin
+                        ? 'rgba(255,255,255,0.72)'
+                        : theme.vars.palette.text.secondary,
                         minHeight: 44,
                         ...(isActived && {
-                          fontWeight: 'fontWeightSemiBold',
-                          color: theme.vars.palette.primary.main,
-                          bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
-                          '&:hover': {
-                            bgcolor: varAlpha(theme.vars.palette.primary.mainChannel, 0.16),
-                          },
-                        }),
+                        fontWeight: 'fontWeightSemiBold',
+
+                        color: isAdmin
+                      ? '#ffffff'
+                      : theme.vars.palette.primary.main,
+
+                      bgcolor: isAdmin
+                      ? 'rgba(255,255,255,0.10)'
+                      : varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
+
+                      '&:hover': {
+                      bgcolor: isAdmin
+                      ? 'rgba(255,255,255,0.14)'
+                      : varAlpha(theme.vars.palette.primary.mainChannel, 0.16),
+                      },
+                      }),
                       }),
                     ]}
                   >
