@@ -38,7 +38,8 @@ type User = {
 
 export default function AdminUsersPage() {
   const { token } = useAuth();
-
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [roleUpdating, setRoleUpdating] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [menuUser, setMenuUser] = useState<User | null>(null);
@@ -67,6 +68,51 @@ export default function AdminUsersPage() {
       fetchUsers();
     }
   }, [token]);
+
+const handleChangeRole = async () => {
+  if (!menuUser || !token) return;
+
+  const newRole = menuUser.role === 'admin' ? 'user' : 'admin';
+
+  setRoleUpdating(true);
+
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/auth/users/${menuUser._id}/role`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ role: newRole }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to change user role');
+    }
+
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user._id === menuUser._id ? { ...user, role: newRole } : user
+      )
+    );
+
+    setMenuUser((currentUser) =>
+      currentUser ? { ...currentUser, role: newRole } : null
+    );
+
+    setRoleDialogOpen(false);
+  } catch (error) {
+    console.error('Failed to change user role:', error);
+    window.alert(error instanceof Error ? error.message : 'Failed to change user role');
+  } finally {
+    setRoleUpdating(false);
+  }
+};
 
   return (
     <DashboardContent>
@@ -166,16 +212,21 @@ export default function AdminUsersPage() {
           onClose={() => setAnchorEl(null)}
           >
           <MenuItem
-  onClick={() => {
-    setSelectedUser(menuUser);
-    setAnchorEl(null);
-  }}
->
-  View User
-</MenuItem>
+          onClick={() => {
+          setSelectedUser(menuUser);
+          setAnchorEl(null);
+          }}
+          >
+          View User
+          </MenuItem>
 
-          <MenuItem onClick={() => setAnchorEl(null)}>
-            Change Role
+          <MenuItem
+          onClick={() => {
+          setAnchorEl(null);
+          setRoleDialogOpen(true);
+          }}
+          >
+          Change Role
           </MenuItem>
 
           <MenuItem onClick={() => setAnchorEl(null)}>
@@ -259,6 +310,39 @@ export default function AdminUsersPage() {
 </Dialog>
         </TableContainer>
       </Card>
+
+      <Dialog
+  open={roleDialogOpen}
+  onClose={() => setRoleDialogOpen(false)}
+  fullWidth
+  maxWidth="xs"
+>
+  <DialogTitle>Change User Role</DialogTitle>
+
+  <DialogContent>
+    <Typography>
+      Change the role of{" "}
+      <strong>{menuUser?.name}</strong> from{" "}
+      <strong>{menuUser?.role}</strong> to{" "}
+      <strong>{menuUser?.role === "admin" ? "user" : "admin"}</strong>?
+    </Typography>
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setRoleDialogOpen(false)}>
+      Cancel
+    </Button>
+
+    <Button
+  variant="contained"
+  onClick={handleChangeRole}
+  disabled={roleUpdating}
+>
+  {roleUpdating ? 'Updating...' : 'Confirm'}
+</Button>
+  </DialogActions>
+</Dialog>
+
     </DashboardContent>
   );
 }

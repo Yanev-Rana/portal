@@ -322,3 +322,61 @@ router.get(
 );
 
 module.exports = router;
+
+router.patch(
+  "/users/:userId/role",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const { role } = req.body;
+      const { userId } = req.params;
+
+      if (!["user", "admin"].includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: "Role must be either user or admin"
+        });
+      }
+
+      if (userId === req.userId.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "You cannot change your own role"
+        });
+      }
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found" 
+        });
+      }
+
+      user.role = role;
+      await user.save();
+
+      return res.status(200).json({
+        success: true,
+        message: `User role changed to ${role}`,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          createdAt: user.createdAt
+        }
+      });
+    } catch (error) {
+      console.error("Change role error:", error);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to change user role"
+      });
+    }
+  }
+);
