@@ -59,33 +59,33 @@ Portal follows a frontend–backend architecture.
 
 ## API Endpoints
 
-The backend exposes the following authentication and user-management endpoints.
+| Method   | Endpoint                          | Purpose                                   | Access                        |
+| -------- | --------------------------------- | ----------------------------------------- | ----------------------------- |
+| `POST`   | `/api/auth/signup`                | Register a new user                       | Public                        |
+| `POST`   | `/api/auth/login`                 | Authenticate a user                       | Public                        |
+| `GET`    | `/api/auth/profile`               | Retrieve the authenticated user's profile | Authenticated                 |
+| `POST`   | `/api/auth/forgot-password`       | Request a password-reset link             | Public                        |
+| `POST`   | `/api/auth/reset-password/:token` | Reset a password using a valid token      | Valid reset token             |
+| `GET`    | `/api/auth/users`                 | Retrieve all users for administration     | Admin                         |
+| `PATCH`  | `/api/auth/users/:userId/role`    | Change a user's role                      | Admin                         |
+| `DELETE` | `/api/auth/users/:userId`         | Delete a user account                     | Admin *(testing in progress)* |
 
-Method	Endpoint	                       Purpose	                                    Access
-POST	/api/auth/signup	               Register a user	                            Public
-POST	/api/auth/login	                   Authenticate a user	                        Public
-GET	    /api/auth/profile	               Retrieve the authenticated user's profile	Authenticated
-POST	/api/auth/forgot-password	       Request a password-reset link	            Public
-POST	/api/auth/reset-password/:token	   Reset a password using a reset token	        Valid reset token
-GET	    /api/auth/users	                   Retrieve users for administration	        Admin
-PATCH	/api/auth/users/:userId/role	   Change a user's role	                        Admin
-DELETE	/api/auth/users/:userId	           Delete a user account	                    Admin; implementation under testing
+**Authentication:** Protected endpoints require a valid JWT in the `Authorization` header.
 
-Protected endpoints require a valid JWT in the request's `Authorization` header:
-
-
+```http
 Authorization: Bearer <JWT_TOKEN>
+```
 
+**Example request body — Change User Role**
 
-The role-update endpoint accepts a JSON body such as:
-
-
+```json
 {
   "role": "admin"
 }
+```
 
+**Valid roles:** `user`, `admin`.
 
-Valid roles are `user` and `admin`. Administrator-only operations are enforced by backend middleware rather than relying solely on frontend navigation.
 
 ## Development Status
 
